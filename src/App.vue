@@ -54,14 +54,15 @@
         class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
       >
         <tr>
-          <th scope="col" class="px-6 py-3">Order Date</th>
-          <th scope="col" class="px-6 py-3">Region</th>
-          <th scope="col" class="px-6 py-3">Manager</th>
-          <th scope="col" class="px-6 py-3">Salesman</th>
-          <th scope="col" class="px-6 py-3">Item</th>
-          <th scope="col" class="px-6 py-3">Units</th>
-          <th scope="col" class="px-6 py-3">Units Price</th>
-          <th scope="col" class="px-6 py-3">Sale Amt</th>
+          <th scope="col" class="px-6 py-3">Nama Outlet</th>
+          <th scope="col" class="px-6 py-3">Alamat</th>
+          <th scope="col" class="px-6 py-3">Kecamatan</th>
+          <th scope="col" class="px-6 py-3">Kelurahan</th>
+          <th scope="col" class="px-6 py-3">Kode Pos</th>
+          <th scope="col" class="px-6 py-3">PIC</th>
+          <th scope="col" class="px-6 py-3">Telepon 1/ Telepon 2</th>
+          <th scope="col" class="px-6 py-3">Jumlah EDC</th>
+          <th scope="col" class="px-6 py-3">Tipe EDC</th>
         </tr>
       </thead>
       <tbody>
@@ -70,14 +71,15 @@
           :key="item.id"
           class="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
         >
-          <td class="px-6 py-4">{{ item["OrderDate"] }}</td>
-          <td class="px-6 py-4">{{ item["Region"] }}</td>
-          <td class="px-6 py-4">{{ item["Manager"] }}</td>
-          <td class="px-6 py-4">{{ item["SalesMan"] }}</td>
-          <td class="px-6 py-4">{{ item["Item"] }}</td>
-          <td class="px-6 py-4">{{ item["Units"] }}</td>
-          <td class="px-6 py-4">{{ item["Unit_price"] }}</td>
-          <td class="px-6 py-4">{{ item["Sale_amt"] }}</td>
+          <td class="px-6 py-4">{{ item["Nama_Outlet"] }}</td>
+          <td class="px-6 py-4">{{ item["Alamat"] }}</td>
+          <td class="px-6 py-4">{{ item["Kecamatan"] }}</td>
+          <td class="px-6 py-4">{{ item["Kelurahan"] }}</td>
+          <td class="px-6 py-4">{{ item["Kode_Pos"] }}</td>
+          <td class="px-6 py-4">{{ item["PIC"] }}</td>
+          <td class="px-6 py-4">{{ item["Telepon"] }}</td>
+          <td class="px-6 py-4">{{ item["Jumlah_EDC"] }}</td>
+          <td class="px-6 py-4">{{ item["Tipe_EDC"] }}</td>
         </tr>
       </tbody>
     </table>
@@ -143,9 +145,10 @@ function readExcelData(file) {
 
         const loadEndTime = Date.now();
         const totalLoadTime = loadEndTime - loadStartTime;
-        console.log(`Total loading time: ${totalLoadTime} milliseconds`);
+        // console.log(`Total loading time: ${totalLoadTime} milliseconds`);
         resolve({ cleanData, totalLoadTime });
       } catch (error) {
+        console.log(error);
         reject(
           new Error(
             "Data yang Anda unggah tidak sesuai dengan template atau kurang lengkap."
@@ -177,22 +180,37 @@ export default {
       const file = e.target.files[0];
       readExcelData(file)
         .then(({ cleanData, totalLoadTime }) => {
+          if (cleanData.length === 0) {
+            this.isUploading = false;
+            this.$swal.fire({
+              icon: "error",
+              title: "Gagal Upload File",
+              text: "Data yang Anda unggah tidak sesuai dengan template atau kurang lengkap.",
+            });
+            return;
+          }
           for (let i = 0; i < cleanData.length; i++) {
             if (
-              !cleanData[i].OrderDate ||
-              !cleanData[i].Region ||
-              !cleanData[i].Manager ||
-              !cleanData[i].SalesMan ||
-              !cleanData[i].Item ||
-              !cleanData[i].Units ||
-              !cleanData[i].Unit_price ||
-              !cleanData[i].Sale_amt
+              !cleanData[i].Nama_Outlet ||
+              !cleanData[i].Alamat ||
+              !cleanData[i].Kecamatan ||
+              !cleanData[i].Kelurahan ||
+              !cleanData[i].Kode_Pos ||
+              !cleanData[i].PIC ||
+              !cleanData[i].Telepon ||
+              !cleanData[i].Jumlah_EDC ||
+              !cleanData[i].Tipe_EDC ||
+              !cleanData[i].Referensi_Simcard ||
+              !cleanData[i].No_Surat_PKS ||
+              !cleanData[i].Jam_Buka ||
+              !cleanData[i].Jam_Tutup
             ) {
-              // console.error("Data tidak sesuai dengan template");
+              console.log(cleanData);
+              console.error("Data tidak sesuai dengan template");
               this.isUploading = false;
               this.$swal.fire({
                 icon: "error",
-                title: "Gagal Upload Ffile",
+                title: "Gagal Upload File",
                 text: "Data yang Anda unggah tidak sesuai dengan template atau kurang lengkap.",
               });
               return;
@@ -206,15 +224,6 @@ export default {
           const stepProgress = 100 / totalSteps;
 
           let currentStep = 0;
-          // let interval = setInterval(() => {
-          //   if (this.uploadProgress < 100) {
-          //     this.uploadProgress += 10; // Menaikkan progress secara bertahap
-          //   } else {
-          //     clearInterval(interval);
-          //     this.file = cleanData;
-          //     this.isUploading = false; // Menghentikan upload saat progress mencapai 100%
-          //   }
-          // }, 100); // Simulasi progress setiap 100ms
 
           const interval = setInterval(() => {
             if (currentStep < totalSteps) {
@@ -222,15 +231,11 @@ export default {
               currentStep++;
             } else {
               clearInterval(interval);
-              // this.file = cleanData;
-              this.isUploading = false; // Menghentikan upload saat progress mencapai 100%
+              this.isUploading = false;
             }
           }, intervalTime);
 
-          // this.file = result;
-          // this.isUploading = false;
-
-          // console.log("Excel data:", result);
+          console.log("Excel data:", cleanData);
         })
         .catch((error) => {
           this.isUploading = false;
@@ -239,7 +244,7 @@ export default {
             title: "Gagal Upload File",
             text: error.message,
           });
-          // console.error("Error reading Excel data:", error);
+          console.error("Error reading Excel data:", error);
         });
     },
   },
